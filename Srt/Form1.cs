@@ -9,8 +9,14 @@ namespace Srt
     {
         List, Button
     }
+    enum Incorrect
+    {
+        None, Hours, Minutes, Seconds, Milliseconds
+    }
+
     public partial class srtMakerForm : Form
     {
+        private DialogResult dr;
         public string desktopPath = "E:\\Sealkeen\\Desktop\\";
         private EventSource eventSource;
         private bool isStarted;
@@ -24,67 +30,61 @@ namespace Srt
             CaptionCollection = new List<Caption>();
             isStarted = false;
             stringCounter = 0;
-            Caption cpt = new Caption();
-            initializeFields(ref cpt);
-            CaptionCollection.Add(cpt);
+            //Caption cpt = new Caption();
+            //initializeFields(ref cpt);
+            //CaptionCollection.Add(cpt);
             currentCaption = -1;
         }
 
         private void txtString_TextChanged(object sender, EventArgs e)
         {
-            if ((sender as TextBox).Text != "")
-                btnAddCaption.Enabled = true;
-            else
-                btnAddCaption.Enabled = false;
+
         }
 
         private void btnAddCaption_Click(object sender, EventArgs e)
         {
-            #region MyRegion
-            //char ch;
-            //for (int i = 0; i < 60; i++)
-            //{
-            //    ch = (char)i;
-            //    label1.Text += "(" + i + ") " + ch + " ";
-            //    if (i % 5 == 0)
-            //        label1.Text += "\n";
-            //} 
-            #endregion
-            if(isStarted)
-                ++stringCounter;
-            else
-                isStarted = true;
-            label1.Text = ( "[" +stringCounter.ToString() + "]" );
-
-            if (stringCounter > 0)
+            if (isTheTimeInTheBoxesIncorrect() != Incorrect.None)
             {
-                Caption cpt = new Caption();
-                initializeFields(ref cpt);
-                fillOutTheFields(ref cpt);
-                CaptionCollection.Insert(stringCounter, cpt);
+                txtShown.Text = "Incorrect time range has been chosen.";
+                return;
             }
-
-            if (CaptionCollection != null)
+            if (txtString.Text != "")
             {
-                Caption Cpt = new Caption();
-                Cpt = CaptionCollection[stringCounter];
-                Cpt.Third = txtString.Text;
-                buildSecondLine(Cpt);
+                if (isStarted) // Check if the first caption exists
+                    ++stringCounter;
+                else
+                    isStarted = true;
+                if (stringCounter >= 0) //Check if our Collection contains any Caption
+                {
+                    label1.Text = ("[" + stringCounter.ToString() + "]");
+                    Caption cpt = new Caption(); //Creating a new caption
+                    initializeFields(ref cpt); 
+                    fillOutTheFields(ref cpt);
+                    CaptionCollection.Insert(stringCounter, cpt);
+                    CaptionCollection[stringCounter].Third = txtString.Text; //Third string field is the text field
+                    buildSecondLine(CaptionCollection[stringCounter]); // Second line contains the time
+                }
+                if (currentCaption != stringCounter) // go to btnShowCaption button to check what this made for 
+                    btnShowCaption.PerformClick();
+                btnShowList.PerformClick();                //Optional
+                if(checkInserted.Checked == true)
+                    lstCaptions.SelectedIndex = stringCounter; //Optional
+                makeAStep();
             }
-            else
-                MessageBox.Show("CaptionCollection[int] == null");
-            if(currentCaption != stringCounter)
-                btnShowCaption.PerformClick();
+            else txtShown.Text = "Type something below at first.";
+        }
+
+        public void makeAStep()
+        {
             if (CaptionCollection.Count > 0)
             {
-                if(isSequencial.CheckState == CheckState.Checked)
+                if (isSequencial.CheckState == CheckState.Checked)
                 {
                     txtFromHours.Text = txtToHours.Text;
                     txtFromMinutes.Text = txtToMinutes.Text;
                     txtFromSeconds.Text = txtToSeconds.Text;
                 }
             }
-            btnShowList.PerformClick();
         }
 
         private void txtSeconds_TextChanged(object sender, EventArgs e)
@@ -198,15 +198,15 @@ namespace Srt
         {
             int i = 0;
 
-            
             i = captionParse(txtFromMinutes.Text);
-            CaptionCollection[stringCounter].isFilled = true;
-            
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].isFilled = true;
 
             if (i<60)
                 i++;
             txtFromMinutes.Text = i.ToString();
-            CaptionCollection[stringCounter].FromMinutes = i;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].FromMinutes = i;
 
             if(eventSource == EventSource.Button)
                 btnAddCaption.Focus();
@@ -223,16 +223,17 @@ namespace Srt
         private void btnCtrlW_Click(object sender, EventArgs e)
         {
             int i = 0;
-
             
             i = captionParse(txtFromSeconds.Text);
-            CaptionCollection[stringCounter].isFilled = true;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].isFilled = true;
             
 
             if (i < 60)
                 i++;
             txtFromSeconds.Text = i.ToString();
-            CaptionCollection[stringCounter].FromSeconds = i;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].FromSeconds = i;
 
             if (eventSource == EventSource.Button)
                 btnAddCaption.Focus();
@@ -241,21 +242,24 @@ namespace Srt
         private void btnAltE_Click(object sender, EventArgs e)
         {
             int i = 0;
-
-            if (CaptionCollection[stringCounter].isFilled)
+            if (CaptionCollection.Count > 0)
             {
-                i = CaptionCollection[stringCounter].ToMinutes;
+                if (CaptionCollection[stringCounter].isFilled)
+                {
+                    i = CaptionCollection[stringCounter].ToMinutes;
+                }
+                else
+                    CaptionCollection[stringCounter].isFilled = true;
             }
             else
             {
                 i = captionParse(txtToMinutes.Text);
-                CaptionCollection[stringCounter].isFilled = true;
             }
-
             if (i < 60)
                 i++;
             txtToMinutes.Text = i.ToString();
-            CaptionCollection[stringCounter].ToMinutes = i;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].ToMinutes = i;
 
             if (eventSource == EventSource.Button)
                 btnAddCaption.Focus();
@@ -264,21 +268,24 @@ namespace Srt
         private void btnAltR_Click(object sender, EventArgs e)
         {
             int i = 0;
-
-            if (CaptionCollection[stringCounter].isFilled)
+                    if (CaptionCollection.Count > 0)
             {
-                i = CaptionCollection[stringCounter].ToSeconds;
+                if (CaptionCollection[stringCounter].isFilled)
+                {
+                    i = CaptionCollection[stringCounter].ToSeconds;
+                }
+                else
+                    CaptionCollection[stringCounter].isFilled = true;
             }
             else
             {
                 i = captionParse(txtToSeconds.Text);
-                CaptionCollection[stringCounter].isFilled = true;
             }
-
             if (i < 60)
                 i++;
             txtToSeconds.Text = i.ToString();
-            CaptionCollection[stringCounter].ToSeconds = i;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].ToSeconds = i;
 
             if (eventSource == EventSource.Button)
                 btnAddCaption.Focus();
@@ -302,13 +309,11 @@ namespace Srt
             label1.Text = ( "[" +stringCounter.ToString() + "]" );
             lstCaptions.Items.Clear();
             CaptionCollection.Clear(); 
-            Caption cpt = new Caption();
-            initializeFields(ref cpt);
-            CaptionCollection.Add(cpt);
+            
             txtString.Text = "";
             txtShown.Text = "";
+            clearBoxes();
             txtString.Focus();
-            fillOutTheBoxes(cpt);
         }
 
         private void btnAddCaption_KeyDown(object sender, KeyEventArgs e)
@@ -348,19 +353,15 @@ namespace Srt
                     break;
                 case Keys.Oemtilde:
                     lstCaptions.Focus();
-                    if(lstCaptions.Items.Count >= 1)
-                        lstCaptions.SelectedIndex = 0;
                     break;
                 case Keys.Delete:
-                    txtFromMinutes.Text = "00";
-                    txtFromSeconds.Text = "00";
-                    txtToMinutes.Text = "00";
-                    txtToSeconds.Text = "00";
+                    btnDelete.PerformClick();
                     break;
-
             }
 
         }
+
+        
 
         private void txtString_KeyDown(object sender, KeyEventArgs e)
         {
@@ -382,13 +383,15 @@ namespace Srt
 
             
             i = captionParse(txtFromMinutes.Text);
-            CaptionCollection[stringCounter].isFilled = true;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].isFilled = true;
             
 
             if (i > 0)
                 i--;
             txtFromMinutes.Text = i.ToString();
-            CaptionCollection[stringCounter].FromMinutes = i;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].FromMinutes = i;
 
             if (eventSource == EventSource.Button)
                 btnAddCaption.Focus();
@@ -402,13 +405,14 @@ namespace Srt
 
             
             i = captionParse(txtFromSeconds.Text);
-            CaptionCollection[stringCounter].isFilled = true;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].isFilled = true;
             
-
             if (i > 0)
                 i--;
             txtFromSeconds.Text = i.ToString();
-            CaptionCollection[stringCounter].FromSeconds = i;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].FromSeconds = i;
 
             if (eventSource == EventSource.Button)
                 btnAddCaption.Focus();
@@ -420,45 +424,52 @@ namespace Srt
         {
             int i = 0;
 
-            if (CaptionCollection[stringCounter].isFilled)
+            if (CaptionCollection.Count > 0)
             {
-                i = CaptionCollection[stringCounter].ToMinutes;
+                if (CaptionCollection[stringCounter].isFilled)
+                {
+                    i = CaptionCollection[stringCounter].ToMinutes;
+                }
+                else
+                    CaptionCollection[stringCounter].isFilled = true;
             }
             else
             {
                 i = captionParse(txtToMinutes.Text);
-                CaptionCollection[stringCounter].isFilled = true;
             }
-
             if (i > 0)
                 i--;
             txtToMinutes.Text = i.ToString();
-            CaptionCollection[stringCounter].ToMinutes = i;
+
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].ToMinutes = i;
 
             if (eventSource == EventSource.Button)
                 btnAddCaption.Focus();
-            else
-                return;
         }
-            
+
         private void btnAltF_Click(object sender, EventArgs e)
         {
             int i = 0;
 
-            if (CaptionCollection[stringCounter].isFilled)
+            if (CaptionCollection.Count > 0)
             {
-                i = CaptionCollection[stringCounter].ToSeconds;
+                if (CaptionCollection[stringCounter].isFilled)
+                {
+                    i = CaptionCollection[stringCounter].ToSeconds;
+                }
+                else
+                    CaptionCollection[stringCounter].isFilled = true;
             }
             else
             {
                 i = captionParse(txtToSeconds.Text);
-                CaptionCollection[stringCounter].isFilled = true;
             }
-
             if (i > 0)
                 i--;
             txtToSeconds.Text = i.ToString();
-            CaptionCollection[stringCounter].ToSeconds = i;
+            if (CaptionCollection.Count > 0)
+                CaptionCollection[stringCounter].ToSeconds = i;
 
             if (eventSource == EventSource.Button)
                 btnAddCaption.Focus();
@@ -490,7 +501,7 @@ namespace Srt
             Cpt.ToHours = captionParse(txtToHours.Text);
             Cpt.ToMinutes = captionParse(txtToMinutes.Text);
             Cpt.ToSeconds = captionParse(txtToSeconds.Text);
-            Cpt.FromMilliseconds = captionMSParse(txtToMilliseconds.Text);
+            Cpt.ToMilliseconds = captionMSParse(txtToMilliseconds.Text);
 
             Cpt.isFilled = true;
         }
@@ -559,12 +570,19 @@ namespace Srt
             else
             {
                 MessageBox.Show("String Counter / ListBox Index Error");
+                return;
             }
             label1.Text = ("[" + stringCounter.ToString() + "]");
+            btnShowCaption.PerformClick();
         }
 
         private void btnReplace_Click(object sender, EventArgs e)
         {
+            if (isTheTimeInTheBoxesIncorrect() != Incorrect.None)
+            {
+                txtShown.Text = "Incorrect time range has been chosen.";
+                return;
+            }
             if (lstCaptions.Items.Count != 0 && lstCaptions.SelectedIndex >=0)
             {
                 currentCaption = -1; //У нас новый кэпшен показывается через Show() только если не совпадает со старым. Тут мы искусственно его делаем не совпавшим.
@@ -576,6 +594,7 @@ namespace Srt
                     txtShown.Text = "Select an Item from the List";
                     return;
                 }
+
 
                 cpt.FromHours = captionParse(txtFromHours.Text);
                 cpt.FromMinutes = captionParse(txtFromMinutes.Text);
@@ -593,8 +612,9 @@ namespace Srt
 
                 btnShowCaption.PerformClick();
                 btnShowList.PerformClick();
+                if (stringCounter >= 0 && stringCounter <= lstCaptions.Items.Count - 1)
+                    lstCaptions.SelectedIndex = stringCounter;
 
-                CaptionCollection[stringCounter] = cpt;
             }
             else
                 txtShown.Text = "Select an Item to Replace";
@@ -614,7 +634,8 @@ namespace Srt
                 {
                     btnCreate.PerformClick();
                 }
-
+                if (stringCounter >= 0 && stringCounter <= lstCaptions.Items.Count - 1)
+                    lstCaptions.SelectedIndex = stringCounter;
             }
             else
                 txtShown.Text = "None to Remove";
@@ -622,22 +643,27 @@ namespace Srt
 
         private void lstCaptions_KeyDown(object sender, KeyEventArgs e)
         {
-            switch (e.KeyCode)
+            if (btnAddCaption.Enabled)
             {
-                case Keys.Delete:
-                    btnDelete.PerformClick();
-                    break;
-                case Keys.Enter:
-                    btnReplace.PerformClick();
-                    break;
-                case Keys.Up:
-                    break;
-                case Keys.Down:
-                    break;
-                default:
-                    btnAddCaption.Focus();
-                    break;
+                switch (e.KeyCode)
+                {
+                    case Keys.Delete:
+                        btnDelete.PerformClick();
+                        break;
+                    case Keys.Enter:
+                        btnShowCaption.PerformClick();
+                        break;
+                    case Keys.Up:
+                        break;
+                    case Keys.Down:
+                        break;
+                    default:
+                        btnAddCaption.Focus();
+                        break;
+                }
             }
+            else
+            { txtString.Focus(); }
         }
 
         private void btnShowCaption_Click(object sender, EventArgs e)
@@ -655,6 +681,7 @@ namespace Srt
 
                 txtShown.Text += (Environment.NewLine + cpt.Second);
                 txtShown.Text += (Environment.NewLine + cpt.Third);
+                txtString.Text = cpt.Third;
                 currentCaption = lstCaptions.SelectedIndex;
             }
 
@@ -671,7 +698,8 @@ namespace Srt
             {
                 if (CaptionCollection[0].isFilled)
                 {
-                    fbDialog.ShowDialog(this);
+                    dr = fbDialog.ShowDialog(this);
+                    if (dr == DialogResult.Cancel) { return; }
                     //fbDialog.ShowDialog();
                     //if (fbDialog.SelectedPath == "")
                     //{
@@ -679,7 +707,7 @@ namespace Srt
                     //    return;
                     //}
                     progSave.Value = 0;
-                    string fileName = fbDialog.SelectedPath + txtFileName.Text + ".srt";
+                    string fileName = fbDialog.SelectedPath + "\\" + txtFileName.Text + ".srt";
                     FileStream stdio = new FileStream(fileName, FileMode.Create, FileAccess.ReadWrite);
                     StreamWriter sw = new StreamWriter(stdio);
 
@@ -688,7 +716,7 @@ namespace Srt
                     foreach (Caption Structure in CaptionCollection)
                     {
                         sw.WriteLine(CaptionCollection.IndexOf(Structure) + 1);
-                        sw.Write(Structure.Second);
+                        sw.WriteLine(Structure.Second);
                         sw.WriteLine(Structure.Third);
                         sw.WriteLine();
                         progSave.Value++;
@@ -721,21 +749,45 @@ namespace Srt
                 txtToHours.Text + ":" +
                 txtToMinutes.Text + ":" +
                 txtToSeconds.Text + "," +
-                txtToMilliseconds.Text + Environment.NewLine);
+                txtToMilliseconds.Text);
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            txtShown.Text = CaptionCollection[stringCounter].Second;
+            txtShown.Text = CaptionCollection[stringCounter].Second + Environment.NewLine;
+            txtShown.Text += CaptionCollection[stringCounter].Third + Environment.NewLine;
+
             txtShown.Text += Convert.ToInt32("12").ToString();
             txtShown.Text += fbDialog.SelectedPath;
         }
 
-        private bool isTheTimeOfTheFollowingCaptionIncorrect(Caption caption)
+        private Incorrect isTheTimeOfTheFollowingCaptionIncorrect(Caption caption)
         {
-            if (CaptionCollection.IndexOf(caption) >= 0)
-                ;
-            return new bool();
+            //bool hoursIncorrect = (caption.ToHours < caption.FromHours);
+            //bool minutesIncorrect = (caption.ToMinutes < caption.FromMinutes);
+            //bool secondsIncorrect = (caption.ToSeconds < caption.FromSeconds);
+            //bool millisecondsIncorrect = (caption.ToMilliseconds < caption.FromMilliseconds);
+
+            //if (hoursIncorrect)
+            //    return Incorrect.Hours;
+            //else
+            //{
+            //    if (minutesIncorrect && !hoursIncorrect)
+            //        return Incorrect.Minutes;
+            //    else
+            //    {
+            //        if (secondsIncorrect && !minutesIncorrect && !hoursIncorrect)
+            //            return Incorrect.Seconds;
+            //        else
+            //        {
+            //            if (millisecondsIncorrect && !secondsIncorrect && !minutesIncorrect && !hoursIncorrect)
+            //                return Incorrect.Milliseconds;
+            //            else
+            return Incorrect.None;
+            //        }
+            //    }
+            //}
+
         }
 
         private void btnAddCaption_KeyPress(object sender, KeyPressEventArgs e)
@@ -802,9 +854,9 @@ namespace Srt
             int j = 0;
             i = ((int)s[0]) - 48;
             c = ((int)s[1]) - 48;
-            j = ((int)s[j]) - 48;
+            j = ((int)s[2]) - 48;
 
-            i = i * 100 + c * 10 + j;
+            i = (i * 100 + c * 10 + j);
             return i;
         }
 
@@ -852,20 +904,26 @@ namespace Srt
         {
             try
             {
-                fbDialog.ShowDialog();
+                dr = fbDialog.ShowDialog(this);
+                if (dr == DialogResult.Cancel) { return; }
                 lstCaptions.Items.Clear();
                 CaptionCollection = new List<Caption>();
-                string path = fbDialog.SelectedPath + txtFileName.Text + ".srt";
+                string path = fbDialog.SelectedPath + "\\" + txtFileName.Text + ".srt";
                 FileStream seeIn = new FileStream(path, FileMode.Open, FileAccess.Read);
                 StreamReader cin = new StreamReader(seeIn);
 
                 List<string> lines = new List<string>();
                 lines.Add(cin.ReadLine());
                 if (lines[0] == null)
-                    return;
+                {
+                    MessageBox.Show("First Line == Null Exception."); 
+                return;
+                }
+
                 while (lines[lines.Count-1] != null)
                 {
-                    lines.Add(cin.ReadLine());
+                    string buffer = cin.ReadLine();
+                    lines.Add(buffer);
                 }
                 txtShown.Text = "";
 
@@ -873,12 +931,14 @@ namespace Srt
                 progSave.Value = 0;
                 foreach(string line in lines)
                 {
+                    //txtShown.Text += Environment.NewLine + line;
                     try
                     {
-                        if (lines.IndexOf(line) + 2 <= lines.Count)
+                        if (lines.IndexOf(line) + 2 <= (lines.Count - 1))
                         {
                             Convert.ToInt32(line);
                             Caption cpt = new Caption();
+                            initializeFields(ref cpt);
 
                             cpt.Second = lines[lines.IndexOf(line) + 1];
                             cpt.Third = lines[lines.IndexOf(line) + 2];
@@ -893,12 +953,13 @@ namespace Srt
                     }
                     catch (FormatException)
                     {
-                        
+
                     }
                     progSave.Value++;
                 }
-                
                 btnShowList.PerformClick();
+                txtShown.Text = "The file has been loaded.";
+                cin.Close();
             }
             catch
             {
@@ -923,15 +984,75 @@ namespace Srt
 
         private void secondToInt(ref Caption cpt)
         {
-            cpt.FromHours = captionParse( cpt.Second.Substring(0, 2) );
-            cpt.FromMinutes = captionParse( cpt.Second.Substring(3, 2) );
+            cpt.FromHours = captionParse( cpt.Second.Substring(0, 2));
+            cpt.FromMinutes = captionParse( cpt.Second.Substring(3, 2));
             cpt.FromSeconds = captionParse(cpt.Second.Substring(6, 2));
-            cpt.FromMilliseconds = captionMSParse(cpt.Second.Substring(6, 3));
+            cpt.FromMilliseconds = captionMSParse(cpt.Second.Substring(9, 3));
 
             cpt.ToHours = captionParse(cpt.Second.Substring(17, 2));
             cpt.ToMinutes = captionParse(cpt.Second.Substring(20, 2));
             cpt.ToSeconds = captionParse(cpt.Second.Substring(23, 2));
             cpt.ToMilliseconds = captionMSParse(cpt.Second.Substring(26, 3));
+        }
+        private void clearBoxes()
+        {
+            txtFromHours.Text = "00";
+            txtFromMinutes.Text = "00";
+            txtFromSeconds.Text = "00";
+            txtFromMilliseconds.Text = "000";
+            txtToHours.Text = "00";
+            txtToMinutes.Text = "00";
+            txtToSeconds.Text = "00";
+            txtToMilliseconds.Text = "000";
+        }
+
+        private void saveTo_KeyDown(object sender, KeyEventArgs e)
+        {
+            btnAddCaption.Focus();
+        }
+
+        private void load_KeyDown(object sender, KeyEventArgs e)
+        {
+            btnAddCaption.Focus();
+        }
+
+        private Incorrect isTheTimeInTheBoxesIncorrect()
+        {
+            bool hoursIncorrect = (captionParse(txtToHours.Text) < captionParse(txtFromHours.Text));
+            bool minutesIncorrect = (captionParse(txtToMinutes.Text) < captionParse(txtFromMinutes.Text));
+            bool secondsIncorrect = (captionParse(txtToSeconds.Text) < captionParse(txtFromSeconds.Text));
+            bool millisecondsIncorrect = (captionMSParse(txtToMilliseconds.Text) < captionMSParse(txtFromMilliseconds.Text));
+
+            bool hoursEquals = (captionParse(txtToHours.Text) == captionParse(txtFromHours.Text));
+            bool minutesEquals = (captionParse(txtToMinutes.Text) == captionParse(txtFromMinutes.Text));
+            bool secondsEquals = (captionParse(txtToSeconds.Text) == captionParse(txtFromSeconds.Text));
+            bool millisecondsEquals = (captionMSParse(txtToMilliseconds.Text) == captionMSParse(txtFromMilliseconds.Text));
+
+            if (hoursIncorrect)
+                return Incorrect.Hours;
+            else
+            {
+                if (minutesIncorrect && hoursEquals)
+                    return Incorrect.Minutes;
+                else
+                {
+                    if (secondsIncorrect && minutesEquals && hoursEquals)
+                        return Incorrect.Seconds;
+                    else
+                    {
+                        if (millisecondsIncorrect && secondsEquals && minutesEquals && hoursEquals)
+                            return Incorrect.Milliseconds;
+                        else
+                            return Incorrect.None;
+                    }
+                }
+            }
+
+        }
+
+        private void loadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            load.PerformClick();
         }
     }
 }

@@ -71,10 +71,11 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.createToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fbDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.load = new System.Windows.Forms.Button();
-            this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.checkInserted = new System.Windows.Forms.CheckBox();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -85,7 +86,6 @@
             this.txtString.Size = new System.Drawing.Size(468, 20);
             this.txtString.TabIndex = 0;
             this.txtString.Text = "Type Your Text Here";
-            this.txtString.TextChanged += new System.EventHandler(this.txtString_TextChanged);
             this.txtString.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtString_KeyDown);
             // 
             // btnAddCaption
@@ -405,6 +405,7 @@
             this.saveTo.Text = "Save to";
             this.saveTo.UseVisualStyleBackColor = true;
             this.saveTo.Click += new System.EventHandler(this.saveTo_Click);
+            this.saveTo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.saveTo_KeyDown);
             // 
             // txtFileName
             // 
@@ -461,7 +462,7 @@
             this.txtShown.Location = new System.Drawing.Point(14, 151);
             this.txtShown.Multiline = true;
             this.txtShown.Name = "txtShown";
-            this.txtShown.Size = new System.Drawing.Size(341, 82);
+            this.txtShown.Size = new System.Drawing.Size(341, 61);
             this.txtShown.TabIndex = 21;
             this.txtShown.Text = "Your Caption Displays Here";
             // 
@@ -482,6 +483,7 @@
             this.button1.TabIndex = 23;
             this.button1.Text = "ShCtr";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Visible = false;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // menuStrip1
@@ -512,6 +514,14 @@
             this.createToolStripMenuItem.Text = "Create New";
             this.createToolStripMenuItem.Click += new System.EventHandler(this.createToolStripMenuItem_Click);
             // 
+            // loadToolStripMenuItem
+            // 
+            this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
+            this.loadToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.loadToolStripMenuItem.Text = "Open";
+            this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
+            // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
@@ -529,19 +539,24 @@
             this.load.Text = "Load";
             this.load.UseVisualStyleBackColor = true;
             this.load.Click += new System.EventHandler(this.load_Click);
+            this.load.KeyDown += new System.Windows.Forms.KeyEventHandler(this.load_KeyDown);
             // 
-            // loadToolStripMenuItem
+            // checkInserted
             // 
-            this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
-            this.loadToolStripMenuItem.Text = "Open";
+            this.checkInserted.AutoSize = true;
+            this.checkInserted.Location = new System.Drawing.Point(14, 218);
+            this.checkInserted.Name = "checkInserted";
+            this.checkInserted.Size = new System.Drawing.Size(164, 17);
+            this.checkInserted.TabIndex = 26;
+            this.checkInserted.Text = "Auto-choose inserted caption";
+            this.checkInserted.UseVisualStyleBackColor = true;
             // 
             // srtMakerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(503, 359);
+            this.Controls.Add(this.checkInserted);
             this.Controls.Add(this.load);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label4);
@@ -587,7 +602,7 @@
             this.MainMenuStrip = this.menuStrip1;
             this.MaximumSize = new System.Drawing.Size(900, 900);
             this.Name = "srtMakerForm";
-            this.Text = "Srt Maker Form";
+            this.Text = "Sealkeen Srt Composer";
             this.Load += new System.EventHandler(this.srtMakerForm_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -644,6 +659,7 @@
         private System.Windows.Forms.FolderBrowserDialog fbDialog;
         private System.Windows.Forms.Button load;
         private System.Windows.Forms.ToolStripMenuItem loadToolStripMenuItem;
+        private System.Windows.Forms.CheckBox checkInserted;
     }
 }
 
